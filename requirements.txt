@@ -1,7 +1,17 @@
+# Create updated requirements.txt for Streamlit Cloud with correct packages including OpenAI v1+
+updated_requirements = """
 streamlit
 pandas
 numpy
-openai
 scikit-learn
 shap
 matplotlib
+openai>=1.0.0
+"""
+
+# Save the updated requirements.txt
+path = "/mnt/data/requirements_updated.txt"
+with open(path, "w") as f:
+    f.write(updated_requirements.strip())
+
+path
