@@ -1,0 +1,21 @@
+<style>
+.stApp {
+    background-color: #1E1E1E;
+    color: white;
+}
+.stDataFrame, .stText, .stMarkdown, .stSubheader {
+    color: white;
+}
+.block-container {
+    padding: 2rem;
+    background-color: #2A2A2A;
+}
+div[data-baseweb="select"] > div {
+    background-color: #333 !important;
+    color: white !important;
+}
+input, textarea {
+    background-color: #333 !important;
+    color: white !important;
+}
+</style>

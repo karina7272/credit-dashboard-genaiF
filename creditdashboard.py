@@ -18,24 +18,6 @@ st.set_page_config(page_title="GenAI Credit Scoring Dashboard", layout="wide", p
 with open("streamlit_dark_theme_fix.css") as css:
     st.markdown(f"<style>{css.read()}</style>", unsafe_allow_html=True)
 
-
-# DARK THEME STYLING
-st.markdown("""
-    <style>
-    .stApp {
-        background-color: #1E1E1E;
-        color: white;
-    }
-    .stDataFrame, .stText, .stMarkdown {
-        color: white;
-    }
-    .block-container {
-        padding: 2rem;
-        background-color: #2A2A2A;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
 st.title("📊 GenAI Academic Credit Scoring Dashboard")
 
 uploaded_file = st.file_uploader("📁 Upload Your Student Credit CSV", type=["csv"])
