@@ -230,28 +230,3 @@ The AI scoring model supports this creditworthy decision based on fairness and p
 
 else:
     st.info("Please upload a CSV file to begin.")
-
-
-    # SHAP Feature Impact Visualization
-    st.subheader("🔍 SHAP Feature Impact Visualization")
-
-    if 'studentID' not in df.columns:
-        st.error("Missing 'studentID' column in the uploaded dataset.")
-    else:
-        # Ensure features and labels are prepared
-        features = df.drop(columns=["Creditworthy", "studentID"], errors='ignore')
-        labels = df["Creditworthy"]
-        model = LogisticRegression()
-        scaler = StandardScaler()
-        features_scaled = scaler.fit_transform(features)
-        model.fit(features_scaled, labels)
-
-        explainer = shap.Explainer(model, features)
-        shap_values = explainer(features)
-
-        feature_options = list(features.columns)
-        selected_features = st.multiselect("Select Features for SHAP Summary", feature_options, default=feature_options)
-
-        if selected_features:
-            shap.summary_plot(shap_values[:, selected_features], features[selected_features], plot_type="bar", show=False)
-            st.pyplot(bbox_inches='tight')
