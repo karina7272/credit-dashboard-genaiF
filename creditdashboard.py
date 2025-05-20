@@ -134,7 +134,9 @@ if uploaded_file:
 **Credit Utilization (%):** {student_row['CreditUtilization(%)']}  
 **Financial Literacy Score:** {student_row['FinancialLiteracyScore']}  
 **Blockchain Hash:** {student_row['Blockchain_Hash']}  
-**GPT Summary:**
+**GPT Summary:**  
+> {student_row['GPT_Summary']}
+    """)
     st.subheader(f"📌 SHAP-Based Interpretation Summary (Student ID: {selected_id})")
     st.markdown(f"""
 This student's credit score reflects a mix of academic achievement, spending habits, and financial responsibility.  
@@ -187,8 +189,6 @@ The AI scoring model supports this creditworthy decision based on fairness and p
 - Diversify financial responsibilities gradually and smartly.  
     "")
 
-  
-> {student_row['GPT_Summary']}
-    """)
+
 else:
     st.info("Please upload a CSV file to begin.")
