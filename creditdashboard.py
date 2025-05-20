@@ -14,24 +14,15 @@ client = openai.OpenAI(api_key=st.secrets["openai_api_key"])
 
 st.set_page_config(page_title="GenAI Credit Scoring Dashboard", layout="wide", page_icon="📊")
 
-# Restored dark theme background
 st.markdown(
     """
     <style>
     .stApp {
-        background-color: #1E1E1E;
-        color: #FFFFFF;
+        background-color: #1e1e1e;
+        color: #f0f0f0;
     }
-    .stMarkdown, .stText, .stDataFrame {
-        color: #FFFFFF !important;
-    }
-    .css-1v0mbdj, .css-ffhzg2 {
-        background-color: #2A2A2A;
-        border-radius: 8px;
-        padding: 16px;
-    }
-    .css-1aumxhk {
-        color: #FFFFFF;
+    .block-container {
+        padding: 2rem;
     }
     </style>
     """,
@@ -105,7 +96,7 @@ if uploaded_file:
     csv_export = df.to_csv(index=False).encode('utf-8')
     st.download_button("⬇️ Download CSV", data=csv_export, file_name="credit_scoring_results.csv", mime="text/csv")
 
-    # SHAP summary chart
+    # SHAP Summary Plot
     st.subheader("🔍 SHAP Feature Impact Visualization")
     explainer = shap.Explainer(model, X_scaled)
     shap_values = explainer(X_scaled)
@@ -131,7 +122,7 @@ if uploaded_file:
     report = classification_report(y, fair_preds, output_dict=False)
     st.text(report)
 
-    # Per-student selection
+    # Per-student detailed display
     st.subheader("🔎 Per-Student Credit Interpretation")
     selected_id = st.selectbox("Select a StudentID to view details", df["StudentID"].unique())
     student_row = df[df["StudentID"] == selected_id].iloc[0]
