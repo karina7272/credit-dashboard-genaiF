@@ -178,29 +178,6 @@ The AI scoring model supports this creditworthy decision based on fairness and p
     missed_impact = "supports" if missed_payments == 0 else "might weaken"
     missed_strength = "slightly" if missed_payments > 0 else ""
 
-    interpretation_text = f"""
-This student's credit score reflects a mix of academic achievement, spending habits, and financial responsibility.  
-The GPA of {student_row['GPA']} indicates moderately strong academic performance, contributing positively to the creditworthiness score.  
-A credit utilization rate of {student_row['CreditUtilization(%)']}% suggests the student is using available credit cautiously and not excessively, which is favorable.  
-The financial literacy score of {student_row['FinancialLiteracyScore']} further reinforces the credit prediction, indicating strong financial understanding.  
-Rent payment behavior marked as '{rent_status}' reflects stable financial routines, which aligns with reliability.  
-Having {missed_payments} missed payments {missed_impact} the score {missed_strength}.  
-SHAP values (if visualized) would likely show GPA and Financial Literacy Score pushing the model toward a CREDITWORTHY classification.  
-Credit Utilization and Missed Payments would act as minor offsets depending on their respective thresholds.  
-The prediction is also reinforced by a consistent history of non-excessive debt behaviors.  
-If visualized, SHAP bars for GPA and Literacy would skew positively to the right of the SHAP axis.  
-The model's fairness-aware classifier aligns with these findings and excludes any demographic bias.  
-SHAP impact shows Financial Literacy and GPA as primary positive contributors.  
-Missed payments, even if zero, are monitored for behavioral trend patterns.  
-Low credit utilization remains a strong positive driver for this student.  
-The combination of academic and financial traits yields high classification confidence.  
-This profile serves as an example of well-rounded financial behavior in the dataset.  
-The blockchain hash ensures data traceability and transparency.  
-Given current trends, this score is likely to improve further if behaviors remain consistent.  
-The AI scoring model supports this creditworthy decision based on fairness and predictive accuracy.  
-    """
-    st.markdown(interpretation_text)
-
     
     st.subheader("✅ 10 Positive Traits in Current Credit Score")
     traits = []
