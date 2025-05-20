@@ -10,12 +10,14 @@ import shap
 import matplotlib.pyplot as plt
 import openai
 
+# Secure API access
 openai.api_key = st.secrets["openai_api_key"]
 
+# Streamlit page config
 st.set_page_config(page_title="GenAI Credit Scoring Dashboard", layout="wide", page_icon="📊")
 
-# Use updated dark theme CSS for readability
-with open("streamlit_dark_theme_corrected.css") as css:
+# Load dark theme CSS with proper visibility
+with open("streamlit_dark_theme_final.css") as css:
     st.markdown(f"<style>{css.read()}</style>", unsafe_allow_html=True)
 
 st.title("📊 GenAI Academic Credit Scoring Dashboard")
