@@ -10,12 +10,10 @@ import matplotlib.pyplot as plt
 import openai
 
 openai.api_key = st.secrets["openai_api_key"]
-
 st.set_page_config(page_title="GenAI Credit Scoring Dashboard", layout="wide", page_icon="📊")
 st.title("📊 GenAI Academic Credit Scoring Dashboard")
 
 uploaded_file = st.file_uploader("📁 Upload Your Student Credit CSV", type=["csv"])
-
 if uploaded_file:
     df = pd.read_csv(uploaded_file)
 
@@ -86,75 +84,14 @@ if uploaded_file:
     fair_model = LogisticRegression(max_iter=1000)
     fair_model.fit(X_fair_scaled, y)
     fair_preds = fair_model.predict(X_fair_scaled)
-    report_df = pd.DataFrame(classification_report(y, fair_preds, output_dict=True)).T
+    report_df = pd.DataFrame(classification_report(y, fair_preds, output_dict=True)).transpose()
     st.dataframe(report_df.style.format(precision=2))
 
     st.subheader("🔎 Per-Student Credit Interpretation")
     selected_id = st.selectbox("Select a StudentID to view details", df["StudentID"].unique())
     student_row = df[df["StudentID"] == selected_id].iloc[0]
 
-    
-    st.subheader("🧠 SHAP-Based Interpretation Summary (Student ID: {})".format(student_row["StudentID"]))
-    st.markdown("""
-This student's credit score reflects a mix of academic achievement, spending habits, and financial responsibility.  
-The GPA of {} indicates moderately strong academic performance, contributing positively to the creditworthiness score.  
-A credit utilization rate of {}% suggests the student is using available credit cautiously and not excessively, which is favorable.  
-The financial literacy score of {} further reinforces the credit prediction, indicating strong financial understanding.  
-Rent payment behavior marked as '{}' reflects stable financial routines, which aligns with reliability.  
-Having {} missed payments {} the score {}.  
-SHAP values (if visualized) would likely show GPA and Financial Literacy Score pushing the model toward a CREDITWORTHY classification.  
-Credit Utilization and Missed Payments would act as minor offsets depending on their respective thresholds.  
-The prediction is also reinforced by a consistent history of non-excessive debt behaviors.  
-If visualized, SHAP bars for GPA and Literacy would skew positively to the right of the SHAP axis.  
-The model's fairness-aware classifier aligns with these findings and excludes any demographic bias.  
-SHAP impact shows Financial Literacy and GPA as primary positive contributors.  
-Missed payments, even if zero, are monitored for behavioral trend patterns.  
-Low credit utilization remains a strong positive driver for this student.  
-The combination of academic and financial traits yields high classification confidence.  
-This profile serves as an example of well-rounded financial behavior in the dataset.  
-The blockchain hash ensures data traceability and transparency.  
-Given current trends, this score is likely to improve further if behaviors remain consistent.  
-The AI scoring model supports this creditworthy decision based on fairness and predictive accuracy.  
-    """.format(
-        student_row['GPA'],
-        student_row['CreditUtilization(%)'],
-        student_row['FinancialLiteracyScore'],
-        "on time" if student_row['RentPaidOnTime'] == 1 else "late",
-        student_row['MissedPayments'],
-        "supports" if student_row['MissedPayments'] == 0 else "might weaken",
-        "slightly" if student_row['MissedPayments'] > 0 else ""
-    ))
-
-    st.subheader("✅ 10 Positive Traits in Current Credit Score")
-    st.markdown("""
-- Maintains a reasonable GPA that meets minimum academic performance.  
-- Keeps credit utilization under 30%, reflecting healthy credit habits.  
-- Financial literacy score is above average, demonstrating knowledge.  
-- Shows consistent rent payment history.  
-- Limited or no frequent missed payments.  
-- Possesses diversified financial traits beneficial for scoring.  
-- Conforms to standard risk thresholds on major indicators.  
-- Demonstrates discipline in credit management.  
-- Aligns well with AI model’s fairness constraints.  
-- Has an overall strong blockchain-verified credit profile.  
-    """)
-
-    st.subheader("🔧 10 Recommendations to Improve Credit Score")
-    st.markdown("""
-- Improve GPA further to enhance long-term financial perceptions.  
-- Continue lowering credit utilization toward 10-15%.  
-- Attend more financial literacy workshops to raise scores.  
-- Explore part-time job options for additional income sources.  
-- Set automatic payment reminders to avoid any future lapses.  
-- Build savings history to supplement credit metrics.  
-- Maintain zero missed payments consistently.  
-- Reduce total loan balances if applicable.  
-- Engage in responsible credit-building practices monthly.  
-- Diversify financial responsibilities gradually and smartly.  
-    """)
-
-
-st.markdown(f"""
+    st.markdown(f"""
 **Prediction:** {'CREDITWORTHY' if student_row['Prediction'] == 1 else 'NOT CREDITWORTHY'}  
 **Confidence:** {student_row['Confidence']}%  
 **GPA:** {student_row['GPA']}  
