@@ -10,9 +10,21 @@ import shap
 import matplotlib.pyplot as plt
 import openai
 
-openai.api_key = st.secrets["openai_api_key"]
+client = openai.OpenAI(api_key=st.secrets["openai_api_key"])
 
 st.set_page_config(page_title="GenAI Credit Scoring Dashboard", layout="wide", page_icon="📊")
+
+# Dark background styling
+st.markdown(
+    """
+    <style>
+    .stApp { background-color: #1e1e1e; color: #f0f0f0; }
+    .block-container { padding: 2rem; }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 st.title("📊 GenAI Academic Credit Scoring Dashboard")
 
 uploaded_file = st.file_uploader("📁 Upload Your Student Credit CSV", type=["csv"])
@@ -57,18 +69,20 @@ if uploaded_file:
         {'CREDITWORTHY' if row['Prediction'] == 1 else 'NOT CREDITWORTHY'} with confidence {row['Confidence']}%.
         """
         try:
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-4",
                 messages=[
                     {"role": "system", "content": "You are a credit risk analyst creating summaries."},
                     {"role": "user", "content": f"Write a professional credit summary:\n{summary_input}"}
                 ]
             )
-            gpt_summary = response['choices'][0]['message']['content'].strip()
+            gpt_summary = response.choices[0].message.content.strip()
         except Exception as e:
             gpt_summary = f"{summary_input} [GPT unavailable: {str(e)}]"
 
-        hash_val = hashlib.sha256(f"{row['StudentID']}-{row['GPA']}-{row['CreditUtilization(%)']}-{row['FinancialLiteracyScore']}".encode()).hexdigest()
+        hash_val = hashlib.sha256(
+            f"{row['StudentID']}-{row['GPA']}-{row['CreditUtilization(%)']}-{row['FinancialLiteracyScore']}".encode()
+        ).hexdigest()
         summaries.append(gpt_summary)
         hashes.append(hash_val)
 
@@ -80,23 +94,27 @@ if uploaded_file:
     csv_export = df.to_csv(index=False).encode('utf-8')
     st.download_button("⬇️ Download CSV", data=csv_export, file_name="credit_scoring_results.csv", mime="text/csv")
 
-    # SHAP summary chart
+    # SHAP Feature Visualization
     st.subheader("🔍 SHAP Feature Impact Visualization")
-    explainer = shap.Explainer(model, X_scaled)
-    shap_values = explainer(X_scaled)
-    fig, ax = plt.subplots(figsize=(10, 6))
-    shap.summary_plot(shap_values, features=X, feature_names=features, show=False)
-    st.pyplot(fig)
+    try:
+        explainer = shap.Explainer(model, X_scaled)
+        shap_values = explainer(X_scaled)
+        fig, ax = plt.subplots(figsize=(10, 6))
+        shap.summary_plot(shap_values, features=X, feature_names=features, show=False)
+        st.pyplot(fig)
+    except Exception as e:
+        st.warning(f"SHAP visualization failed: {e}")
 
-    # Markdown interpretation
+    # Markdown Interpretation
+    st.subheader("📘 Interpretation")
     try:
         with open("shap_interpretation.md", "r") as file:
             interpretation = file.read()
         st.markdown(interpretation)
-    except:
-        st.warning("SHAP interpretation markdown file not found.")
+    except FileNotFoundError:
+        st.info("Interpretation file not found. Please upload `shap_interpretation.md`.")
 
-    # Fairness-aware comparison
+    # Fairness-Aware Comparison
     st.subheader("⚖️ Fairness-Aware Model Report (No Race/Gender)")
     fair_features = [col for col in features if not ("Race_" in col or "Gender_" in col)]
     X_fair = df_encoded[fair_features]
@@ -107,7 +125,7 @@ if uploaded_file:
     report = classification_report(y, fair_preds, output_dict=False)
     st.text(report)
 
-    # StudentID filter for interpretation
+    # Filter by Student ID
     st.subheader("🔎 Per-Student Credit Interpretation")
     selected_id = st.selectbox("Select a StudentID to view details", df["StudentID"].unique())
     student_row = df[df["StudentID"] == selected_id].iloc[0]
