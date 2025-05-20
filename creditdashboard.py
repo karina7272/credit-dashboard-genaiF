@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -136,8 +135,7 @@ if uploaded_file:
 **Blockchain Hash:** {student_row['Blockchain_Hash']}  
 **GPT Summary:**  
 > {student_row['GPT_Summary']}
-    """)
-
+    """
     st.subheader("🧠 SHAP-Based Interpretation Summary (Student ID: {})".format(selected_id))
 
     rent_status = "on time" if student_row['RentPaidOnTime'] == 1 else "late"
@@ -146,7 +144,7 @@ if uploaded_file:
     missed_strength = "slightly" if missed_payments > 0 else ""
 
     interpretation_text = f"""
-This student's credit score reflects a mix of academic achievement, spending habits, and financial responsibility.  
+This student\'s credit score reflects a mix of academic achievement, spending habits, and financial responsibility.  
 The GPA of {student_row['GPA']} indicates moderately strong academic performance, contributing positively to the creditworthiness score.  
 A credit utilization rate of {student_row['CreditUtilization(%)']}% suggests the student is using available credit cautiously and not excessively, which is favorable.  
 The financial literacy score of {student_row['FinancialLiteracyScore']} further reinforces the credit prediction, indicating strong financial understanding.  
@@ -196,5 +194,6 @@ The AI scoring model supports this creditworthy decision based on fairness and p
 - Diversify financial responsibilities gradually and smartly.  
     """)
 
+)
 else:
     st.info("Please upload a CSV file to begin.")
