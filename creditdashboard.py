@@ -10,32 +10,9 @@ import shap
 import matplotlib.pyplot as plt
 import openai
 
-# Secure API Key for GPT
 openai.api_key = st.secrets["openai_api_key"]
 
-# Page setup
 st.set_page_config(page_title="GenAI Credit Scoring Dashboard", layout="wide", page_icon="📊")
-
-st.markdown(
-    """
-    <style>
-    .stApp {
-        background-image: url("https://images.unsplash.com/photo-1581091870622-1e7d88469d2d?fit=crop&w=1600&q=80");
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        color: white;
-    }
-    .block-container {
-        background-color: rgba(0, 0, 0, 0.75);
-        padding: 2rem;
-        border-radius: 10px;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
 st.title("📊 GenAI Academic Credit Scoring Dashboard")
 
 uploaded_file = st.file_uploader("📁 Upload Your Student Credit CSV", type=["csv"])
@@ -71,10 +48,7 @@ if uploaded_file:
     df['Prediction'] = model.predict(X_scaled)
     df['Confidence'] = (model.predict_proba(X_scaled)[:, 1] * 100).round(2)
 
-    summaries = []
-    hashes = []
-
-    st.subheader("📜 GPT-Generated Credit Summaries")
+    summaries, hashes = [], []
 
     for i, row in df.iterrows():
         summary_input = f"""
@@ -94,43 +68,59 @@ if uploaded_file:
         except Exception as e:
             gpt_summary = f"{summary_input} [GPT unavailable: {str(e)}]"
 
-        hash_string = f"{row['StudentID']}-{row['GPA']}-{row['CreditUtilization(%)']}-{row['FinancialLiteracyScore']}"
-        hash_val = hashlib.sha256(hash_string.encode()).hexdigest()
-
+        hash_val = hashlib.sha256(f"{row['StudentID']}-{row['GPA']}-{row['CreditUtilization(%)']}-{row['FinancialLiteracyScore']}".encode()).hexdigest()
         summaries.append(gpt_summary)
         hashes.append(hash_val)
 
     df['GPT_Summary'] = summaries
     df['Blockchain_Hash'] = hashes
 
+    st.subheader("📜 GPT-Generated Credit Summaries")
     st.dataframe(df[['StudentID', 'Prediction', 'Confidence', 'GPT_Summary', 'Blockchain_Hash']])
-
     csv_export = df.to_csv(index=False).encode('utf-8')
-    st.download_button("⬇️ Download Full Results as CSV", data=csv_export, file_name="credit_scoring_results.csv", mime="text/csv")
+    st.download_button("⬇️ Download CSV", data=csv_export, file_name="credit_scoring_results.csv", mime="text/csv")
 
-    st.success("✅ Analysis complete! CSV export is ready.")
-
-    # SHAP Explainability
+    # SHAP summary chart
     st.subheader("🔍 SHAP Feature Impact Visualization")
     explainer = shap.Explainer(model, X_scaled)
     shap_values = explainer(X_scaled)
-
     fig, ax = plt.subplots(figsize=(10, 6))
     shap.summary_plot(shap_values, features=X, feature_names=features, show=False)
     st.pyplot(fig)
+
+    # Markdown interpretation
+    try:
+        with open("shap_interpretation.md", "r") as file:
+            interpretation = file.read()
+        st.markdown(interpretation)
+    except:
+        st.warning("SHAP interpretation markdown file not found.")
 
     # Fairness-aware comparison
     st.subheader("⚖️ Fairness-Aware Model Report (No Race/Gender)")
     fair_features = [col for col in features if not ("Race_" in col or "Gender_" in col)]
     X_fair = df_encoded[fair_features]
     X_fair_scaled = scaler.fit_transform(X_fair)
-
     fair_model = LogisticRegression(max_iter=1000)
     fair_model.fit(X_fair_scaled, y)
     fair_preds = fair_model.predict(X_fair_scaled)
-
     report = classification_report(y, fair_preds, output_dict=False)
     st.text(report)
 
+    # StudentID filter for interpretation
+    st.subheader("🔎 Per-Student Credit Interpretation")
+    selected_id = st.selectbox("Select a StudentID to view details", df["StudentID"].unique())
+    student_row = df[df["StudentID"] == selected_id].iloc[0]
+
+    st.markdown(f"""
+**Prediction:** {'CREDITWORTHY' if student_row['Prediction'] == 1 else 'NOT CREDITWORTHY'}  
+**Confidence:** {student_row['Confidence']}%  
+**GPA:** {student_row['GPA']}  
+**Credit Utilization (%):** {student_row['CreditUtilization(%)']}  
+**Financial Literacy Score:** {student_row['FinancialLiteracyScore']}  
+**Blockchain Hash:** `{student_row['Blockchain_Hash']}`  
+**GPT Summary:**  
+> {student_row['GPT_Summary']}
+    """)
 else:
     st.info("Please upload a CSV file to begin.")
