@@ -10,15 +10,26 @@ import shap
 import matplotlib.pyplot as plt
 import openai
 
-# Secure API access
 openai.api_key = st.secrets["openai_api_key"]
 
-# Streamlit page config
 st.set_page_config(page_title="GenAI Credit Scoring Dashboard", layout="wide", page_icon="📊")
 
-# Load dark theme CSS with proper visibility
-with open("streamlit_dark_theme_final.css") as css:
-    st.markdown(f"<style>{css.read()}</style>", unsafe_allow_html=True)
+# DARK THEME STYLING
+st.markdown("""
+    <style>
+    .stApp {
+        background-color: #1E1E1E;
+        color: white;
+    }
+    .stDataFrame, .stText, .stMarkdown {
+        color: white;
+    }
+    .block-container {
+        padding: 2rem;
+        background-color: #2A2A2A;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 st.title("📊 GenAI Academic Credit Scoring Dashboard")
 
@@ -109,7 +120,8 @@ if uploaded_file:
     fair_model.fit(X_fair_scaled, y)
     fair_preds = fair_model.predict(X_fair_scaled)
     report = classification_report(y, fair_preds, output_dict=False)
-    st.text(report)
+
+    st.markdown(f"<pre style='color:white'>{report}</pre>", unsafe_allow_html=True)
 
     st.subheader("🔎 Per-Student Credit Interpretation")
     selected_id = st.selectbox("Select a StudentID to view details", df["StudentID"].unique())
