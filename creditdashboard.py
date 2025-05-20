@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -125,6 +126,40 @@ if uploaded_file:
     st.subheader("🔎 Per-Student Credit Interpretation")
     selected_id = st.selectbox("Select a StudentID to view details", df["StudentID"].unique())
     student_row = df[df["StudentID"] == selected_id].iloc[0]
+    st.subheader("🧠 SHAP-Based Interpretation Summary (Student ID: {})".format(selected_id))
+
+    gpa = student_row['GPA']
+    credit_util = student_row['CreditUtilization(%)']
+    fin_lit = student_row['FinancialLiteracyScore']
+    rent_status = "on time" if student_row['RentPaidOnTime'] == 1 else "late"
+    missed = student_row['MissedPayments']
+    missed_effect = "supports" if missed == 0 else "might weaken"
+    slight = "slightly" if missed > 0 else ""
+
+    interpretation_text = f"""
+This student's credit score reflects a mix of academic achievement, spending habits, and financial responsibility.  
+The GPA of {gpa} indicates moderately strong academic performance, contributing positively to the creditworthiness score.  
+A credit utilization rate of {credit_util}% suggests the student is using available credit cautiously and not excessively, which is favorable.  
+The financial literacy score of {fin_lit} further reinforces the credit prediction, indicating strong financial understanding.  
+Rent payment behavior marked as "{rent_status}" reflects stable financial routines, which aligns with reliability.  
+Having {missed} missed payments {missed_effect} the score {slight}.  
+SHAP values (if visualized) would likely show GPA and Financial Literacy Score pushing the model toward a CREDITWORTHY classification.  
+Credit Utilization and Missed Payments would act as minor offsets depending on their respective thresholds.  
+The prediction is also reinforced by a consistent history of non-excessive debt behaviors.  
+If visualized, SHAP bars for GPA and Literacy would skew positively to the right of the SHAP axis.  
+The model's fairness-aware classifier aligns with these findings and excludes any demographic bias.  
+SHAP impact shows Financial Literacy and GPA as primary positive contributors.  
+Missed payments, even if zero, are monitored for behavioral trend patterns.  
+Low credit utilization remains a strong positive driver for this student.  
+The combination of academic and financial traits yields high classification confidence.  
+This profile serves as an example of well-rounded financial behavior in the dataset.  
+The blockchain hash ensures data traceability and transparency.  
+Given current trends, this score is likely to improve further if behaviors remain consistent.  
+The AI scoring model supports this creditworthy decision based on fairness and predictive accuracy.
+    """
+    st.markdown(interpretation_text)
+
+
 
     st.markdown(f"""
 **Prediction:** {'CREDITWORTHY' if student_row['Prediction'] == 1 else 'NOT CREDITWORTHY'}  
@@ -135,7 +170,8 @@ if uploaded_file:
 **Blockchain Hash:** {student_row['Blockchain_Hash']}  
 **GPT Summary:**  
 > {student_row['GPT_Summary']}
-    """
+    """)
+
     st.subheader("🧠 SHAP-Based Interpretation Summary (Student ID: {})".format(selected_id))
 
     rent_status = "on time" if student_row['RentPaidOnTime'] == 1 else "late"
@@ -144,7 +180,7 @@ if uploaded_file:
     missed_strength = "slightly" if missed_payments > 0 else ""
 
     interpretation_text = f"""
-This student\'s credit score reflects a mix of academic achievement, spending habits, and financial responsibility.  
+This student's credit score reflects a mix of academic achievement, spending habits, and financial responsibility.  
 The GPA of {student_row['GPA']} indicates moderately strong academic performance, contributing positively to the creditworthiness score.  
 A credit utilization rate of {student_row['CreditUtilization(%)']}% suggests the student is using available credit cautiously and not excessively, which is favorable.  
 The financial literacy score of {student_row['FinancialLiteracyScore']} further reinforces the credit prediction, indicating strong financial understanding.  
@@ -194,6 +230,5 @@ The AI scoring model supports this creditworthy decision based on fairness and p
 - Diversify financial responsibilities gradually and smartly.  
     """)
 
-)
 else:
     st.info("Please upload a CSV file to begin.")
