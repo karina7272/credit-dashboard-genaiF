@@ -10,25 +10,9 @@ import shap
 import matplotlib.pyplot as plt
 import openai
 
-client = openai.OpenAI(api_key=st.secrets["openai_api_key"])
+openai.api_key = st.secrets["openai_api_key"]
 
 st.set_page_config(page_title="GenAI Credit Scoring Dashboard", layout="wide", page_icon="📊")
-
-st.markdown(
-    """
-    <style>
-    .stApp {
-        background-color: #1e1e1e;
-        color: #f0f0f0;
-    }
-    .block-container {
-        padding: 2rem;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
 st.title("📊 GenAI Academic Credit Scoring Dashboard")
 
 uploaded_file = st.file_uploader("📁 Upload Your Student Credit CSV", type=["csv"])
@@ -73,14 +57,14 @@ if uploaded_file:
         {'CREDITWORTHY' if row['Prediction'] == 1 else 'NOT CREDITWORTHY'} with confidence {row['Confidence']}%.
         """
         try:
-            response = client.chat.completions.create(
+            response = openai.ChatCompletion.create(
                 model="gpt-4",
                 messages=[
                     {"role": "system", "content": "You are a credit risk analyst creating summaries."},
                     {"role": "user", "content": f"Write a professional credit summary:\n{summary_input}"}
                 ]
             )
-            gpt_summary = response.choices[0].message.content.strip()
+            gpt_summary = response['choices'][0]['message']['content'].strip()
         except Exception as e:
             gpt_summary = f"{summary_input} [GPT unavailable: {str(e)}]"
 
@@ -96,7 +80,7 @@ if uploaded_file:
     csv_export = df.to_csv(index=False).encode('utf-8')
     st.download_button("⬇️ Download CSV", data=csv_export, file_name="credit_scoring_results.csv", mime="text/csv")
 
-    # SHAP Summary Plot
+    # SHAP summary chart
     st.subheader("🔍 SHAP Feature Impact Visualization")
     explainer = shap.Explainer(model, X_scaled)
     shap_values = explainer(X_scaled)
@@ -104,6 +88,7 @@ if uploaded_file:
     shap.summary_plot(shap_values, features=X, feature_names=features, show=False)
     st.pyplot(fig)
 
+    # Markdown interpretation
     try:
         with open("shap_interpretation.md", "r") as file:
             interpretation = file.read()
@@ -122,7 +107,7 @@ if uploaded_file:
     report = classification_report(y, fair_preds, output_dict=False)
     st.text(report)
 
-    # Per-student detailed display
+    # StudentID filter for interpretation
     st.subheader("🔎 Per-Student Credit Interpretation")
     selected_id = st.selectbox("Select a StudentID to view details", df["StudentID"].unique())
     student_row = df[df["StudentID"] == selected_id].iloc[0]
