@@ -6,8 +6,9 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report
 import shap
+import matplotlib.pyplot as plt
+import plotly.express as px
 import openai
-import plotly.graph_objects as go
 
 openai.api_key = st.secrets["openai_api_key"]
 
@@ -66,18 +67,20 @@ if uploaded_file:
     df['Confidence'] = (model.predict_proba(X_scaled)[:, 1] * 100).round(2)
 
     summaries, hashes = [], []
+
     for i, row in df.iterrows():
-        summary_input = f"""
-        Student with GPA {row['GPA']}, credit utilization {row['CreditUtilization(%)']}%, 
-        and financial literacy score {row['FinancialLiteracyScore']} is predicted to be 
-        {'CREDITWORTHY' if row['Prediction'] == 1 else 'NOT CREDITWORTHY'} with confidence {row['Confidence']}%.
-        """
+        summary_input = (
+            f"Student with GPA {row['GPA']}, credit utilization {row['CreditUtilization(%)']}%, "
+            f"and financial literacy score {row['FinancialLiteracyScore']} is predicted to be "
+            f"{'CREDITWORTHY' if row['Prediction'] == 1 else 'NOT CREDITWORTHY'} with confidence {row['Confidence']}%."
+        )
         try:
             response = openai.ChatCompletion.create(
                 model="gpt-4",
                 messages=[
                     {"role": "system", "content": "You are a credit risk analyst creating summaries."},
-                    {"role": "user", "content": f"Write a professional credit summary:\n{summary_input}"}
+                    {"role": "user", "content": f"Write a professional credit summary:
+{summary_input}"}
                 ]
             )
             gpt_summary = response['choices'][0]['message']['content'].strip()
@@ -99,25 +102,17 @@ if uploaded_file:
     st.subheader("🔍 SHAP Feature Impact Visualization")
     explainer = shap.Explainer(model, X_scaled)
     shap_values = explainer(X_scaled)
+    fig, ax = plt.subplots(figsize=(10, 6))
+    shap.summary_plot(shap_values, features=X, feature_names=features, show=False)
+    st.pyplot(fig)
 
-    shap_df = pd.DataFrame(shap_values.values, columns=features)
-    shap_mean = shap_df.abs().mean().sort_values(ascending=True)
+    # Add interactive Plotly chart without removing the matplotlib chart
+    mean_shap_vals = np.abs(shap_values.values).mean(axis=0)
+    shap_df = pd.DataFrame({
+        'Feature': features,
+        'Mean |SHAP value|': mean_shap_vals
+    }).sort_values(by='Mean |SHAP value|', ascending=False).head(10)
 
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        x=shap_mean.values,
-        y=shap_mean.index,
-        orientation='h',
-        marker=dict(color='rgba(58, 71, 80, 0.6)', line=dict(color='rgba(58, 71, 80, 1.0)', width=1))
-    ))
-    fig.update_layout(
-        title="SHAP Value (Average Impact on Model Output)",
-        xaxis_title="Mean(|SHAP value|)",
-        yaxis_title="Feature",
-        template="plotly_dark",
-        height=600
-    )
-    st.plotly_chart(fig, use_container_width=True)
-
-else:
-    st.info("Please upload a CSV file to begin.")
+    fig2 = px.bar(shap_df, x='Mean |SHAP value|', y='Feature', orientation='h', title="Interactive SHAP Feature Importance")
+    fig2.update_layout(template='plotly_dark', yaxis=dict(autorange="reversed"))
+    st.plotly_chart(fig2, use_container_width=True)
