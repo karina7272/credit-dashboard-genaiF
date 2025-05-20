@@ -5,13 +5,17 @@ import numpy as np
 import hashlib
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import classification_report
+import shap
+import matplotlib.pyplot as plt
 import openai
 
-# Set OpenAI API key securely
+# Secure API Key for GPT
 openai.api_key = st.secrets["openai_api_key"]
 
-# Streamlit page setup
+# Page setup
 st.set_page_config(page_title="GenAI Credit Scoring Dashboard", layout="wide", page_icon="📊")
+
 st.markdown(
     """
     <style>
@@ -87,8 +91,8 @@ if uploaded_file:
                 ]
             )
             gpt_summary = response['choices'][0]['message']['content'].strip()
-        except Exception:
-            gpt_summary = summary_input + " [GPT unavailable]"
+        except Exception as e:
+            gpt_summary = f"{summary_input} [GPT unavailable: {str(e)}]"
 
         hash_string = f"{row['StudentID']}-{row['GPA']}-{row['CreditUtilization(%)']}-{row['FinancialLiteracyScore']}"
         hash_val = hashlib.sha256(hash_string.encode()).hexdigest()
@@ -105,5 +109,28 @@ if uploaded_file:
     st.download_button("⬇️ Download Full Results as CSV", data=csv_export, file_name="credit_scoring_results.csv", mime="text/csv")
 
     st.success("✅ Analysis complete! CSV export is ready.")
+
+    # SHAP Explainability
+    st.subheader("🔍 SHAP Feature Impact Visualization")
+    explainer = shap.Explainer(model, X_scaled)
+    shap_values = explainer(X_scaled)
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    shap.summary_plot(shap_values, features=X, feature_names=features, show=False)
+    st.pyplot(fig)
+
+    # Fairness-aware comparison
+    st.subheader("⚖️ Fairness-Aware Model Report (No Race/Gender)")
+    fair_features = [col for col in features if not ("Race_" in col or "Gender_" in col)]
+    X_fair = df_encoded[fair_features]
+    X_fair_scaled = scaler.fit_transform(X_fair)
+
+    fair_model = LogisticRegression(max_iter=1000)
+    fair_model.fit(X_fair_scaled, y)
+    fair_preds = fair_model.predict(X_fair_scaled)
+
+    report = classification_report(y, fair_preds, output_dict=False)
+    st.text(report)
+
 else:
     st.info("Please upload a CSV file to begin.")
