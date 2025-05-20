@@ -1,0 +1,35 @@
+<style>
+/* Global background and text */
+.stApp {
+    background-color: #1E1E1E;
+    color: white;
+}
+h1, h2, h3, h4, h5, h6, p, div, span, label {
+    color: white !important;
+}
+
+/* Dropdowns and form elements */
+div[data-baseweb="select"] > div {
+    background-color: #333 !important;
+    color: white !important;
+}
+input, textarea {
+    background-color: #333 !important;
+    color: white !important;
+}
+.stTextInput > div > div > input {
+    background-color: #333 !important;
+    color: white !important;
+}
+
+/* DataFrame header and cell text */
+thead tr th, tbody tr td {
+    color: white !important;
+}
+
+/* Sidebar styling */
+.css-1d391kg {
+    background-color: #2A2A2A !important;
+    color: white !important;
+}
+</style>
