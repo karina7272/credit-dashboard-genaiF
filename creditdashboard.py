@@ -125,7 +125,9 @@ if uploaded_file:
 
     st.markdown(f"<pre style='color:white'>{report}</pre>", unsafe_allow_html=True)
 
-    st.subheader("🔎 Per-Student Credit Interpretation")
+    st.dataframe(fair_report_df)
+
+st.subheader("🔎 Per-Student Credit Interpretation")
     selected_id = st.selectbox("Select a StudentID to view details", df["StudentID"].unique())
     student_row = df[df["StudentID"] == selected_id].iloc[0]
 
