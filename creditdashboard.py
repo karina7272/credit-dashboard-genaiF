@@ -113,6 +113,8 @@ if uploaded_file:
         st.warning("SHAP interpretation markdown file not found.")
 
     st.subheader("⚖️ Fairness-Aware Model Report (No Race/Gender)")
+
+
     fair_features = [col for col in features if not ("Race_" in col or "Gender_" in col)]
     X_fair = df_encoded[fair_features]
     X_fair_scaled = scaler.fit_transform(X_fair)
