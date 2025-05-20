@@ -10,9 +10,34 @@ import shap
 import matplotlib.pyplot as plt
 import openai
 
-openai.api_key = st.secrets["openai_api_key"]
+client = openai.OpenAI(api_key=st.secrets["openai_api_key"])
 
 st.set_page_config(page_title="GenAI Credit Scoring Dashboard", layout="wide", page_icon="📊")
+
+# Restored dark theme background
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background-color: #1E1E1E;
+        color: #FFFFFF;
+    }
+    .stMarkdown, .stText, .stDataFrame {
+        color: #FFFFFF !important;
+    }
+    .css-1v0mbdj, .css-ffhzg2 {
+        background-color: #2A2A2A;
+        border-radius: 8px;
+        padding: 16px;
+    }
+    .css-1aumxhk {
+        color: #FFFFFF;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 st.title("📊 GenAI Academic Credit Scoring Dashboard")
 
 uploaded_file = st.file_uploader("📁 Upload Your Student Credit CSV", type=["csv"])
@@ -57,14 +82,14 @@ if uploaded_file:
         {'CREDITWORTHY' if row['Prediction'] == 1 else 'NOT CREDITWORTHY'} with confidence {row['Confidence']}%.
         """
         try:
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-4",
                 messages=[
                     {"role": "system", "content": "You are a credit risk analyst creating summaries."},
                     {"role": "user", "content": f"Write a professional credit summary:\n{summary_input}"}
                 ]
             )
-            gpt_summary = response['choices'][0]['message']['content'].strip()
+            gpt_summary = response.choices[0].message.content.strip()
         except Exception as e:
             gpt_summary = f"{summary_input} [GPT unavailable: {str(e)}]"
 
@@ -88,7 +113,6 @@ if uploaded_file:
     shap.summary_plot(shap_values, features=X, feature_names=features, show=False)
     st.pyplot(fig)
 
-    # Markdown interpretation
     try:
         with open("shap_interpretation.md", "r") as file:
             interpretation = file.read()
@@ -107,7 +131,7 @@ if uploaded_file:
     report = classification_report(y, fair_preds, output_dict=False)
     st.text(report)
 
-    # StudentID filter for interpretation
+    # Per-student selection
     st.subheader("🔎 Per-Student Credit Interpretation")
     selected_id = st.selectbox("Select a StudentID to view details", df["StudentID"].unique())
     student_row = df[df["StudentID"] == selected_id].iloc[0]
