@@ -6,12 +6,30 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report
 import shap
-import plotly.graph_objects as go
 import openai
+import plotly.graph_objects as go
 
 openai.api_key = st.secrets["openai_api_key"]
 
 st.set_page_config(page_title="GenAI Credit Scoring Dashboard", layout="wide", page_icon="📊")
+
+# DARK THEME STYLING
+st.markdown("""
+    <style>
+    .stApp {
+        background-color: #1E1E1E;
+        color: white;
+    }
+    .stDataFrame, .stText, .stMarkdown {
+        color: white;
+    }
+    .block-container {
+        padding: 2rem;
+        background-color: #2A2A2A;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 st.title("📊 GenAI Academic Credit Scoring Dashboard")
 
 uploaded_file = st.file_uploader("📁 Upload Your Student Credit CSV", type=["csv"])
@@ -48,9 +66,12 @@ if uploaded_file:
     df['Confidence'] = (model.predict_proba(X_scaled)[:, 1] * 100).round(2)
 
     summaries, hashes = [], []
-
     for i, row in df.iterrows():
-        summary_input = f"Student with GPA {row['GPA']}, credit utilization {row['CreditUtilization(%)']}%, and financial literacy score {row['FinancialLiteracyScore']} is predicted to be {'CREDITWORTHY' if row['Prediction'] == 1 else 'NOT CREDITWORTHY'} with confidence {row['Confidence']}%."
+        summary_input = f"""
+        Student with GPA {row['GPA']}, credit utilization {row['CreditUtilization(%)']}%, 
+        and financial literacy score {row['FinancialLiteracyScore']} is predicted to be 
+        {'CREDITWORTHY' if row['Prediction'] == 1 else 'NOT CREDITWORTHY'} with confidence {row['Confidence']}%.
+        """
         try:
             response = openai.ChatCompletion.create(
                 model="gpt-4",
@@ -79,29 +100,23 @@ if uploaded_file:
     explainer = shap.Explainer(model, X_scaled)
     shap_values = explainer(X_scaled)
 
-    # Interactive Plotly-based SHAP summary
     shap_df = pd.DataFrame(shap_values.values, columns=features)
-    shap_df["StudentID"] = df["StudentID"]
-    shap_means = shap_df[features].abs().mean().sort_values(ascending=False)
-    top_features = shap_means.head(15).index.tolist()
-    shap_summary = shap_df[top_features].abs().mean().sort_values()
+    shap_mean = shap_df.abs().mean().sort_values(ascending=True)
 
     fig = go.Figure()
     fig.add_trace(go.Bar(
-        x=shap_summary.values,
-        y=shap_summary.index,
+        x=shap_mean.values,
+        y=shap_mean.index,
         orientation='h',
-        marker=dict(color='royalblue')
+        marker=dict(color='rgba(58, 71, 80, 0.6)', line=dict(color='rgba(58, 71, 80, 1.0)', width=1))
     ))
-
     fig.update_layout(
-        title="Interactive SHAP Feature Importance",
-        xaxis_title="Mean |SHAP value|",
+        title="SHAP Value (Average Impact on Model Output)",
+        xaxis_title="Mean(|SHAP value|)",
         yaxis_title="Feature",
         template="plotly_dark",
         height=600
     )
-
     st.plotly_chart(fig, use_container_width=True)
 
 else:
