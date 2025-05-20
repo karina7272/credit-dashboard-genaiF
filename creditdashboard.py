@@ -10,10 +10,12 @@ import matplotlib.pyplot as plt
 import openai
 
 openai.api_key = st.secrets["openai_api_key"]
+
 st.set_page_config(page_title="GenAI Credit Scoring Dashboard", layout="wide", page_icon="📊")
 st.title("📊 GenAI Academic Credit Scoring Dashboard")
 
 uploaded_file = st.file_uploader("📁 Upload Your Student Credit CSV", type=["csv"])
+
 if uploaded_file:
     df = pd.read_csv(uploaded_file)
 
@@ -84,8 +86,9 @@ if uploaded_file:
     fair_model = LogisticRegression(max_iter=1000)
     fair_model.fit(X_fair_scaled, y)
     fair_preds = fair_model.predict(X_fair_scaled)
-    report_df = pd.DataFrame(classification_report(y, fair_preds, output_dict=True)).transpose()
-    st.dataframe(report_df.style.format(precision=2))
+    report = classification_report(y, fair_preds, output_dict=True)
+    report_df = pd.DataFrame(report).transpose()
+    st.dataframe(report_df)
 
     st.subheader("🔎 Per-Student Credit Interpretation")
     selected_id = st.selectbox("Select a StudentID to view details", df["StudentID"].unique())
@@ -150,7 +153,7 @@ The AI scoring model supports this creditworthy decision based on fairness and p
     st.subheader("🔧 10 Recommendations to Improve Credit Score")
     st.markdown("""
 - Improve GPA further to enhance long-term financial perceptions.  
-- Continue lowering credit utilization toward 10-15%.  
+- Continue lowering credit utilization toward 10–15%.  
 - Attend more financial literacy workshops to raise scores.  
 - Explore part-time job options for additional income sources.  
 - Set automatic payment reminders to avoid any future lapses.  
@@ -160,5 +163,6 @@ The AI scoring model supports this creditworthy decision based on fairness and p
 - Engage in responsible credit-building practices monthly.  
 - Diversify financial responsibilities gradually and smartly.  
     """)
+
 else:
     st.info("Please upload a CSV file to begin.")
