@@ -7,16 +7,8 @@ Original file is located at
     https://colab.research.google.com/drive/1E0hAxNZ3uSdNgy9U6N6XvfedYhitnxCX
 """
 
-# Regenerate final output after environment reset
-import os
-from zipfile import ZipFile
-
-# Define the directory for the app
-project_dir = "/mnt/data/credit_dashboard_final"
-os.makedirs(project_dir, exist_ok=True)
-
-# credit_dashboard.py content
-streamlit_code = """
+# Recreate the cleaned version of creditdashboard.py after kernel reset
+clean_app_code = """
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -25,14 +17,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 import openai
 
-import openai
-
-# Secure API key
+# Set OpenAI API key securely
 openai.api_key = st.secrets["openai_api_key"]
 
-
-
-# Page config and styling
+# Streamlit page setup
 st.set_page_config(page_title="GenAI Credit Scoring Dashboard", layout="wide", page_icon="📊")
 st.markdown(
     \"\"\"
@@ -131,20 +119,9 @@ else:
     st.info("Please upload a CSV file to begin.")
 """
 
-# requirements.txt content
-requirements = "streamlit\npandas\nnumpy\nscikit-learn\nopenai\n"
+# Save the cleaned script
+path = "/mnt/data/creditdashboard_cleaned.py"
+with open(path, "w") as f:
+    f.write(clean_app_code)
 
-# Write files
-with open(os.path.join(project_dir, "credit_dashboard.py"), "w") as f:
-    f.write(streamlit_code)
-
-with open(os.path.join(project_dir, "requirements.txt"), "w") as f:
-    f.write(requirements)
-
-# Zip the project
-zip_path = "/mnt/data/credit_dashboard_final_project.zip"
-with ZipFile(zip_path, 'w') as zipf:
-    zipf.write(os.path.join(project_dir, "credit_dashboard.py"), arcname="credit_dashboard.py")
-    zipf.write(os.path.join(project_dir, "requirements.txt"), arcname="requirements.txt")
-
-zip_path
+path
