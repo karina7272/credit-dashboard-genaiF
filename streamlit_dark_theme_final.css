@@ -1,0 +1,28 @@
+<style>
+.stApp {
+    background-color: #121212;
+    color: white;
+}
+h1, h2, h3, h4, h5, h6, p, div, span, label, .stText, .stMarkdown, .stSubheader, .css-ffhzg2 {
+    color: white !important;
+}
+div[data-baseweb="select"] > div, input, textarea {
+    background-color: #333 !important;
+    color: white !important;
+    border-color: white !important;
+}
+thead tr th, tbody tr td {
+    color: white !important;
+}
+button {
+    background-color: #333 !important;
+    color: white !important;
+}
+.css-1v0mbdj {
+    background-color: #1f1f1f !important;
+    color: white !important;
+}
+.css-1cpxqw2 {
+    background-color: #1f1f1f !important;
+}
+</style>
